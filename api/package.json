@@ -44,7 +44,7 @@
     "cors": "^2.8.5",
     "feathers-objection": "4.2.4",
     "helmet": "^3.20.0",
-    "knex": "^0.19.5",
+    "knex": "^2.4.0",
     "mysql2": "^1.7.0",
     "objection": "^2.2.16",
     "serve-favicon": "^2.5.0",
