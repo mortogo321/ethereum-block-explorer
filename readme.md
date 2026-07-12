@@ -1,60 +1,70 @@
 # Ethereum Block Explorer
 
-The Demo of real-time private Ethereum Block Explorer.
+A real-time Ethereum block explorer demonstrating a Feathers/Socket.io API subscribed to an Ethereum node over WebSocket RPC, persisting blocks to MySQL, and streaming new blocks live to a React frontend.
 
-API:
-1. FeatherJs (https://feathersjs.com/)
-2. KnexJs (http://knexjs.org/)
-3. Objection.js (https://vincit.github.io/objection.js/)
+## What's inside
 
-WEB:
-1. Reactjs (https://reactjs.org/)
-2. FeatherJs Client (https://docs.feathersjs.com/api/client.html#load-with-a-module-loader)
-3. Socket.io Client (https://socket.io/docs/client-api/)
+- **api** — a FeathersJS service backend that:
+  - subscribes to `newBlockHeaders` on an Ethereum node via `web3-eth` over a WebSocket RPC connection
+  - persists each new block to MySQL through Objection.js/Knex models (`blocks`, `users`)
+  - exposes a `blocks` Feathers service (REST + Socket.io) and emits a `newBlock` event on every insert for real-time updates
+  - includes a `users` service with Feathers authentication (JWT + local strategy) scaffolded in
+- **web** — a React single-page app that connects to the API over Socket.io via the Feathers client, shows connection status, fetches the latest blocks on connect, and prepends new blocks as they arrive in real time
 
-Video:
+## Tech stack
 
-https://www.loom.com/share/2abb18b5cb2845d19618ff551cb09d33
+**API**
+- FeathersJS (Express + Socket.io transports)
+- Knex and Objection.js (MySQL)
+- web3-eth (Ethereum WebSocket subscription)
+- Feathers authentication (JWT, local strategy)
+- TypeScript, Mocha/ts-mocha for tests
 
-## Installation
+**Web**
+- React (Create React App)
+- Feathers client with Socket.io transport
+- Sass
 
-API:
-```
+## Quickstart
+
+Requires a running MySQL instance and access to an Ethereum node's WebSocket RPC endpoint.
+
+```bash
+# API
 cd api
 yarn
+# configure MySQL connection and Ethereum RPC endpoint in config/default.json
+yarn dev    # hot-reload dev server, or: yarn start
 
-# configure mysql connection and Ethereum RPC at `config/default.json`
-
-...
-"mysql": {
-    "client": "mysql2",
-    "connection": "mysql://user:password@localhost:3306/db_name"
-  },
-  "ethereum": {
-    "rpc": "ws://host:port"
-  }
-...
-
-```
-
-WEB:
-```
+# Web (in a separate terminal)
 cd web
 yarn
-```
-
-## Run
-```
-API:
-# open new terminal
-cd api
-yarn start or yarn dev (hot reload)
-
-WEB:
-# open new terminal
-cd web
 yarn start
 ```
 
-Default api is running on http://localhost:3030  
-Default web is running on http://localhost:3000
+API runs on `http://localhost:3030` by default; the web app runs on `http://localhost:3000`.
+
+## Project structure
+
+```
+api/
+  config/                    # default/production/test config (MySQL connection, Ethereum RPC, auth)
+  src/
+    services/ethereum/       # subscribes to new block headers over WebSocket RPC
+    services/blocks/         # Feathers service + hooks persisting and broadcasting blocks
+    services/users/          # Feathers service for authentication
+    models/                  # Objection.js models (blocks, users)
+    hooks/new-block.ts       # emits the newBlock event after a block is created
+  test/                      # service tests
+
+web/
+  src/
+    feathers/                # Feathers client configured with Socket.io transport
+    App.js                   # connection status + live block feed UI
+```
+
+## Key endpoints / real-time events
+
+- `GET /blocks` — paginated list of stored blocks (Feathers REST)
+- Socket.io event `newBlock` on the `blocks` service — pushed to connected clients whenever a new block is stored
+- `users` service (`/users`) — Feathers authentication (JWT + local strategy)
